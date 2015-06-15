@@ -13,61 +13,75 @@ end
 
 ##########
 
-$attributes = {
-  :ensure => 'present',
-  :owner => 'root',
-  :mode => '0644' ,
-  :require => 'Package[aurora-executor]',
-  :source => 'puppet:///aurora/thermos.erb'
-}
+# $attributes = {
+#   :ensure => 'present',
+#   :owner => 'root',
+#   :mode => '0644' ,
+#   :require => 'Package[aurora-executor]',
+#   :source => 'puppet:///aurora/thermos.erb'
+# }
 
 describe 'aurora::executor' do
-  let(:title) {'$packages'}
+  let(:params) {{:name => 'packages'}}
+  let(:facts) { {'packages' => '[aurora-doc,aurora-executor]'} }
+  let('attributes') {
+    {:ensure => 'present',
+    :owner => 'root',
+    :mode => '0644' ,
+    :require => 'Package[aurora-executor]',
+    :source => 'puppet:///aurora/thermos.erb'
+  } }
 
   it { should contain_class('aurora::executor') }
 
-  it { should run.with_params('$packages') }
+  it { should run.with_params(packages) }
 
   # check that name $packages is an array of exactly 2 items,
   # and is the items we expect
-  expect('$packages').to have(2).items
-  expect('$packages').to contain_exactly('aurora-doc',
+  it do
+  expect('packages').to have(2).items
+  expect('packages').to contain_exactly('aurora-doc',
   'aurora-executor')
 
   it do
-    should contain_package('$packages').with(
+    should contain_package(packages).with(
     'ensure' => '$aurora::version',
     'require' => 'Class[aurora::repo]',
-    ) }
+    )
   end
+end
+
 
   it do
-    should contain_file('/etc/default/thermos').with($attributes)
+    should contain_file('/etc/default/thermos').with(attributes)
   end
 
 
   # check when thermos file is not present
   context 'thermos file absent'
-  let(:title) {'$packages'}
+  let(:params) {{:name => 'packages'}}
+  let(:facts) { {'packages' => '[aurora-doc,aurora-executor]'} }
 
-  $bad_attributes = {
+  # $bad_attributes = {
+  #   :ensure => 'present',
+  #   :owner => 'root',
+  #   :mode => '000' ,
+  #   :require => 'Package[aurora-executor]',
+  #   :source => 'puppet:///aurora/thermos.erb'
+  # }
+
+  it do
+    should contain_file('/etc/default/thermos').with({
     :ensure => 'present',
     :owner => 'root',
     :mode => '000' ,
     :require => 'Package[aurora-executor]',
-    :source => 'puppet:///aurora/thermos.erb'
-  }
+    :source => 'puppet:///aurora/thermos.erb',})
 
-  it do
-    should contain_file('/etc/default/thermos').with($bad_attributes)
 
-    it do
-      expect {
-        should compile
-      }.to raise_error()
+    expect { should compile }.to raise_error(Puppet::Error)
     end
-  end
-
+end
 
   #context '$packages parameter missing values'
   #let(:params) ## with_content { {:compress => true} }

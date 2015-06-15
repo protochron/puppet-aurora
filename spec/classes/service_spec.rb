@@ -21,22 +21,21 @@ context 'The subclass aurora::master should be present in the catalog' do
        should contain_class('aurora::master')
   }
 end
-end
 
 # test that either the service aurora-scheduler is running, or aurora service is running, but not both
-before(:each) do
-    @scheduler_service = $aurora::master #
-  end
+#before(:each) do
+    $scheduler_service = '$aurora_master' #
+  #end
 
 context 'with master => true' do
   let(:facts) {
-    {ensure : 'running',
-      enable  : '$aurora::params::enable',
-      hasstatus : 'true',
-      hasrestart : 'true',
-      require  : 'Package['aurora-scheduler']',
-      provider  : '$provider',
-      }
+    { :ensure => 'running',
+      :enable  => '$aurora::params::enable',
+      :hasstatus => 'true',
+      :hasrestart => 'true',
+      :require  => 'Package[aurora-scheduler]',
+      :provider  => '$provider',
+      } }
   ####
 
 
@@ -54,22 +53,26 @@ describe 'aurora::service' do
 end
 
 ## cases below require that aurora::master is true
-describe service('aurora-scheduler') :if => os[:family] == 'ubuntu' do
+describe 'service(aurora-scheduler)'
+  let(:facts) { { :osfamily => 'ubuntu' } }
 
-it { should be_running.under('upstart') }
-it { should_not be_running.under('undef') }
+it do
+   should be_running.under('upstart')
+  should_not be_running.under('undef')
 end
 
-describe service('aurora-scheduler') :if => os[:family] == 'default' do
-  it { should be_running.under('undef') }
-it { should_not be_running.under('upstart') }
+describe 'service(aurora-scheduler)'
+let(:facts) { { :osfamily => 'default' } }
+it do
+   should be_running.under('undef')
+  should_not be_running.under('upstart')
 end
 #######
   context 'with master => true' do
     let(:params) { {:master => true} }
 
     it do
-      should include('aurora::scheduler') \
+      should include('aurora::scheduler')
     end
   end
 
@@ -77,6 +80,7 @@ end
     let(:params) { {:master => default} }
 
     it do
-      should include('aurora::executor') \
+      should include('aurora::executor')
     end
   end
+end
